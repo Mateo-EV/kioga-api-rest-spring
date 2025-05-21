@@ -5,8 +5,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.hibernate.query.SortDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.kioga.kioga_api_rest.dto.CursorPaginatedResponseDto;
@@ -31,6 +34,28 @@ public class ProductServiceImpl implements ProductService {
     return productMapper.toDto(productRepository.findAll());
   }
 
+  private Sort getSortByPattern(String sortBy) {
+    String fieldToSort;
+    Direction direction;
+
+    if (sortBy != null) {
+      if (sortBy.startsWith("name")) {
+        fieldToSort = "name";
+      } else if (sortBy.startsWith("price")) {
+        fieldToSort = "price";
+      } else {
+        fieldToSort = null;
+      }
+
+      direction = sortBy.endsWith("asc") ? Direction.ASC : Direction.DESC;
+    } else {
+      fieldToSort = "id";
+      direction = Direction.DESC;
+    }
+
+    return fieldToSort != null ? Sort.by(direction, fieldToSort) : null;
+  }
+
   @Override
   public CursorPaginatedResponseDto<ProductDto> getPaginatedAndFilteredActiveProducts(
       Long cursor,
@@ -43,10 +68,20 @@ public class ProductServiceImpl implements ProductService {
       String sortBy) {
     final int limit = 10;
 
-    Pageable pageable = PageRequest.of(0, limit + 1);
+    Sort sort = getSortByPattern(sortBy);
+    Pageable pageable = PageRequest.of(0, limit + 1, sort);
 
-    List<Product> products = productRepository
-        .findCursorPaginatedAndFilteredActiveProducts(
+    List<Product> products = sort != null
+        ? productRepository.findCursorPaginatedAndFilteredActiveProducts(
+            cursor,
+            minPrice,
+            maxPrice,
+            categories,
+            brands,
+            availability,
+            subcategories,
+            pageable)
+        : productRepository.findCursorPaginatedAndFilteredActiveProductsSortByOrder(
             cursor,
             minPrice,
             maxPrice,

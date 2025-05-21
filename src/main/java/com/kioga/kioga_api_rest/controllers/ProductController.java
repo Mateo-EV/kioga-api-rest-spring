@@ -15,7 +15,7 @@ import com.kioga.kioga_api_rest.services.ProductService;
 
 import lombok.RequiredArgsConstructor;
 
-@RestController()
+@RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
@@ -30,7 +30,7 @@ public class ProductController {
       @RequestParam(required = false) List<String> brands,
       @RequestParam(required = false) List<String> availability,
       @RequestParam(required = false) List<String> subcategories,
-      @RequestParam(required = false) String sortBy) {
+      @RequestParam(required = false, name = "orderBy") String sortBy) {
 
     CursorPaginatedResponseDto<ProductDto> productsPaginated = productService.getPaginatedAndFilteredActiveProducts(
         cursor,

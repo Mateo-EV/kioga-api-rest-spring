@@ -15,8 +15,8 @@ import com.kioga.kioga_api_rest.entites.Product;
 public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("""
           SELECT p FROM Product p
-          LEFT JOIN FETCH p.brand
-          LEFT JOIN FETCH p.category
+          JOIN FETCH p.brand
+          JOIN FETCH p.category
           LEFT JOIN FETCH p.subcategory
           WHERE p.isActive = true
           AND (p.price * (1 - p.discount) BETWEEN :min AND :max)
@@ -30,7 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
               OR ('nostock' IN :availability AND p.stock = 0)
           )
       """)
-  List<Product> findPaginatedAndFilteredActiveProducts(
+  List<Product> findCursorPaginatedAndFilteredActiveProducts(
       @Param("cursor") Long cursor,
       @Param("min") BigDecimal min,
       @Param("max") BigDecimal max,
@@ -41,28 +41,25 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       Pageable pageable);
 
   @Query("""
-          SELECT p FROM Product p
-          JOIN p.category c
-          JOIN p.brand b
-          LEFT JOIN p.subcategory s
-          WHERE p.id IN (
-              SELECT op.product.id
-              FROM OrderProduct op
-              JOIN op.order o
-              WHERE o.status = 'Sent'
-              AND o.createdAt >= :oneWeekAgo
-              GROUP BY op.product.id
-              ORDER BY SUM(op.quantity) DESC
-          )
+        SELECT p
+        FROM Product p
+        JOIN FETCH p.category c
+        JOIN FETCH p.brand b
+        LEFT JOIN FETCH p.subcategory s
+        LEFT JOIN OrderProduct op ON op.product = p
+        LEFT JOIN op.order o
+            ON o.status = 'Sent' AND o.createdAt >= :oneWeekAgo
+        GROUP BY p
+        ORDER BY COALESCE(SUM(op.quantity), 0) DESC
       """)
-  List<Product> findBestSellingProductsWeekly(@Param("oneWeekAgo") Instant oneWeekAgo, Pageable pageable);
+  List<Product> findAllWithSalesRanking(@Param("oneWeekAgo") Instant oneWeekAgo, Pageable pageable);
 
   Optional<Product> findBySlug(String slug);
 
   @Query("""
         SELECT p FROM Product p
-        LEFT JOIN FETCH p.brand
-        LEFT JOIN FETCH p.category
+        JOIN FETCH p.brand
+        JOIN FETCH p.category
         LEFT JOIN FETCH p.subcategory
         WHERE p.isActive = true
         AND p.id <> :notProductId

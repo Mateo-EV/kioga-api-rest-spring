@@ -2,15 +2,15 @@ package com.kioga.kioga_api_rest.services;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
-import com.kioga.kioga_api_rest.dto.PaginatedResponseDto;
+import com.kioga.kioga_api_rest.dto.CursorPaginatedResponseDto;
+import com.kioga.kioga_api_rest.dto.product.ProductDto;
 import com.kioga.kioga_api_rest.entites.Product;
 
 public interface ProductService {
-  List<Product> getAllProducts();
+  List<ProductDto> getAllProducts();
 
-  PaginatedResponseDto<Product> getPaginatedAndFilteredActiveProducts(
+  CursorPaginatedResponseDto<ProductDto> getPaginatedAndFilteredActiveProducts(
       Long cursor,
       BigDecimal minPrice,
       BigDecimal maxPrice,
@@ -20,17 +20,17 @@ public interface ProductService {
       List<String> subcategories,
       String sortBy);
 
-  List<Product> getBestSellingProductsWeekly();
+  List<ProductDto> getBestSellingProductsWeekly();
 
-  Optional<Product> getProductBySlug(String slug);
+  ProductDto getProductBySlug(String slug);
 
-  List<Product> getSimilarProductsBySlug(String slug);
+  List<ProductDto> getSimilarProductsBySlug(String slug);
 
-  Optional<Product> getProductById(Long id);
+  ProductDto getProductById(Long id);
 
-  Product createProduct(Product product);
+  ProductDto createProduct(Product product);
 
-  Product updateProduct(Long id, Product product);
+  ProductDto updateProduct(Long id, Product product);
 
   void deleteProduct(Long id);
 }

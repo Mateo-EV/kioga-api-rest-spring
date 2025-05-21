@@ -4,33 +4,35 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.kioga.kioga_api_rest.dto.PaginatedResponseDto;
+import com.kioga.kioga_api_rest.dto.CursorPaginatedResponseDto;
+import com.kioga.kioga_api_rest.dto.product.ProductDto;
 import com.kioga.kioga_api_rest.entites.Product;
+import com.kioga.kioga_api_rest.mappers.ProductMapper;
 import com.kioga.kioga_api_rest.repositories.ProductRepository;
 import com.kioga.kioga_api_rest.services.ProductService;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
   private final ProductRepository productRepository;
+  private final ProductMapper productMapper;
 
-  public ProductServiceImpl(ProductRepository productRepository) {
-    this.productRepository = productRepository;
+  @Override
+  public List<ProductDto> getAllProducts() {
+    return productMapper.toDto(productRepository.findAll());
   }
 
   @Override
-  public List<Product> getAllProducts() {
-    return productRepository.findAll();
-  }
-
-  @Override
-  public PaginatedResponseDto<Product> getPaginatedAndFilteredActiveProducts(
+  public CursorPaginatedResponseDto<ProductDto> getPaginatedAndFilteredActiveProducts(
       Long cursor,
       BigDecimal minPrice,
       BigDecimal maxPrice,
@@ -39,12 +41,20 @@ public class ProductServiceImpl implements ProductService {
       List<String> availability,
       List<String> subcategories,
       String sortBy) {
-    int limit = 10;
+    final int limit = 10;
 
     Pageable pageable = PageRequest.of(0, limit + 1);
 
-    List<Product> products = productRepository.findPaginatedAndFilteredActiveProducts(
-        cursor, minPrice, maxPrice, categories, brands, availability, subcategories, pageable);
+    List<Product> products = productRepository
+        .findCursorPaginatedAndFilteredActiveProducts(
+            cursor,
+            minPrice,
+            maxPrice,
+            categories,
+            brands,
+            availability,
+            subcategories,
+            pageable);
     Long nextCursor = products.isEmpty() || products.size() < limit + 1 ? null
         : products.get(limit).getId();
 
@@ -52,32 +62,36 @@ public class ProductServiceImpl implements ProductService {
       products.remove(limit);
     }
 
-    return new PaginatedResponseDto<>(products, nextCursor);
+    return new CursorPaginatedResponseDto<>(productMapper.toDto(products), nextCursor);
   }
 
   @Override
-  public List<Product> getBestSellingProductsWeekly() {
+  public List<ProductDto> getBestSellingProductsWeekly() {
     Pageable pageable = PageRequest.of(0, 10);
 
-    return productRepository.findBestSellingProductsWeekly(
+    List<Product> products = productRepository.findAllWithSalesRanking(
         Instant.now().minus(7, ChronoUnit.DAYS),
         pageable);
+
+    return productMapper.toDto(products);
   }
 
   @Override
-  public Optional<Product> getProductById(Long id) {
-    return productRepository.findById(id);
+  public ProductDto getProductById(Long id) {
+    Product product = productRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+    return productMapper.toDto(product);
   }
 
   @Override
-  public Product createProduct(Product product) {
-    return productRepository.save(product);
+  public ProductDto createProduct(Product product) {
+    return productMapper.toDto(productRepository.save(product));
   }
 
   @Override
-  public Product updateProduct(Long id, Product product) {
+  public ProductDto updateProduct(Long id, Product product) {
     product.setId(id);
-    return productRepository.save(product);
+    return productMapper.toDto(productRepository.save(product));
   }
 
   @Override
@@ -88,24 +102,25 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Optional<Product> getProductBySlug(String slug) {
-    return productRepository.findBySlug(slug);
+  public ProductDto getProductBySlug(String slug) {
+    Product product = productRepository.findBySlug(slug)
+        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+    return productMapper.toDto(product);
   }
 
   @Override
-  public List<Product> getSimilarProductsBySlug(String slug) {
-    Optional<Product> product = getProductBySlug(slug);
+  public List<ProductDto> getSimilarProductsBySlug(String slug) {
+    Product product = productRepository.findBySlug(slug)
+        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-    if (product.isPresent()) {
-      return productRepository.findRelatedProducts(
-          product.get().getId(),
-          product.get().getCategory().getId(),
-          product.get().getBrand().getId(),
-          product.get().getSubcategory() != null ? product.get().getSubcategory().getId() : null,
-          Pageable.ofSize(10));
-    }
+    List<Product> similarProducts = productRepository.findRelatedProducts(
+        product.getId(),
+        product.getCategory().getId(),
+        product.getBrand().getId(),
+        product.getSubcategory().getId(),
+        Pageable.ofSize(10));
 
-    throw new RuntimeException("Product not found");
+    return productMapper.toDto(similarProducts);
   }
 
 }

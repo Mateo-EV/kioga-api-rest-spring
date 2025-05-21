@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class PaginatedResponseDto<T> {
+public class CursorPaginatedResponseDto<T> {
   private List<T> items;
   private Long nextCursor;
 }

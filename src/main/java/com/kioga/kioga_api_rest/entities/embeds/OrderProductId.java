@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites.embeds;
+package com.kioga.kioga_api_rest.entities.embeds;
 
 import jakarta.persistence.Embeddable;
 import lombok.Data;

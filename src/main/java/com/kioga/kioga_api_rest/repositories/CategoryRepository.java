@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.kioga.kioga_api_rest.entites.Category;
+import com.kioga.kioga_api_rest.entities.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
   @Query("""

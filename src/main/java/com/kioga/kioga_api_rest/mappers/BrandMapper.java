@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 
-import com.kioga.kioga_api_rest.dto.BrandDto;
-import com.kioga.kioga_api_rest.entites.Brand;
+import com.kioga.kioga_api_rest.dto.brand.BrandDto;
+import com.kioga.kioga_api_rest.entities.Brand;
 
 @Mapper(componentModel = "spring")
 public interface BrandMapper {

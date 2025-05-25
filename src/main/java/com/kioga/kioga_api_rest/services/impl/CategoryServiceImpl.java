@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.kioga.kioga_api_rest.dto.category.CategoryDto;
 import com.kioga.kioga_api_rest.dto.category.CategoryWithProductsDto;
-import com.kioga.kioga_api_rest.entites.Category;
-import com.kioga.kioga_api_rest.entites.Product;
+import com.kioga.kioga_api_rest.entities.Category;
+import com.kioga.kioga_api_rest.entities.Product;
 import com.kioga.kioga_api_rest.mappers.CategoryMapper;
 import com.kioga.kioga_api_rest.repositories.CategoryRepository;
 import com.kioga.kioga_api_rest.repositories.ProductRepository;

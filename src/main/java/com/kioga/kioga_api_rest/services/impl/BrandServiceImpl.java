@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kioga.kioga_api_rest.dto.BrandDto;
+import com.kioga.kioga_api_rest.dto.brand.BrandDto;
 import com.kioga.kioga_api_rest.mappers.BrandMapper;
 import com.kioga.kioga_api_rest.repositories.BrandRepository;
 import com.kioga.kioga_api_rest.services.BrandService;

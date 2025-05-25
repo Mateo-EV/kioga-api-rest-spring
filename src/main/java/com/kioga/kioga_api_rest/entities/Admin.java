@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import java.time.Instant;
 

@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites.enums;
+package com.kioga.kioga_api_rest.entities.enums;
 
 public enum OrderStatus {
   Pending,

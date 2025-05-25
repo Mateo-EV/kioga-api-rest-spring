@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 
 import com.kioga.kioga_api_rest.dto.category.CategoryDto;
 import com.kioga.kioga_api_rest.dto.category.CategoryWithProductsDto;
-import com.kioga.kioga_api_rest.entites.Category;
+import com.kioga.kioga_api_rest.entities.Category;
 
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {

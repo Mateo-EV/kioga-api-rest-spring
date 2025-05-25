@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.kioga.kioga_api_rest.dto.CursorPaginatedResponseDto;
 import com.kioga.kioga_api_rest.dto.product.ProductDto;
-import com.kioga.kioga_api_rest.entites.Product;
+import com.kioga.kioga_api_rest.entities.Product;
 
 public interface ProductService {
   List<ProductDto> getAllProducts();

@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import java.math.BigDecimal;
 import java.time.Instant;

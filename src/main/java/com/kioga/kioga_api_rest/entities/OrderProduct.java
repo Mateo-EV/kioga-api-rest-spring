@@ -1,10 +1,10 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import java.math.BigDecimal;
 
 import org.hibernate.annotations.ColumnDefault;
 
-import com.kioga.kioga_api_rest.entites.embeds.OrderProductId;
+import com.kioga.kioga_api_rest.entities.embeds.OrderProductId;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;

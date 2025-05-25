@@ -9,4 +9,10 @@ public interface CategoryService {
   List<CategoryDto> getAllCategories();
 
   List<CategoryWithProductsDto> getTopCategories();
+
+  // CategoryDto createCategory(CategoryDto categoryDto);
+
+  // CategoryDto updateCategory(Long id, CategoryDto categoryDto);
+
+  // void deleteCategoryById(Long id);
 }

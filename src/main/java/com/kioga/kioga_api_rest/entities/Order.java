@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.kioga.kioga_api_rest.entites.enums.OrderStatus;
+import com.kioga.kioga_api_rest.entities.enums.OrderStatus;
 
 @Entity
 @Table(name = "orders")

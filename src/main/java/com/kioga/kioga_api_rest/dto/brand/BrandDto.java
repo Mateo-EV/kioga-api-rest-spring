@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.dto;
+package com.kioga.kioga_api_rest.dto.brand;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

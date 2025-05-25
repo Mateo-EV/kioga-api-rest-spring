@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.hibernate.query.SortDirection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.kioga.kioga_api_rest.dto.CursorPaginatedResponseDto;
 import com.kioga.kioga_api_rest.dto.product.ProductDto;
-import com.kioga.kioga_api_rest.entites.Product;
+import com.kioga.kioga_api_rest.entities.Product;
 import com.kioga.kioga_api_rest.mappers.ProductMapper;
 import com.kioga.kioga_api_rest.repositories.ProductRepository;
 import com.kioga.kioga_api_rest.services.ProductService;
@@ -114,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public ProductDto getProductById(Long id) {
     Product product = productRepository.findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
     return productMapper.toDto(product);
   }
 
@@ -132,27 +131,27 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public void deleteProduct(Long id) {
     Product existingProduct = productRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Product not found"));
+        .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
     productRepository.delete(existingProduct);
   }
 
   @Override
   public ProductDto getProductBySlug(String slug) {
     Product product = productRepository.findBySlug(slug)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
     return productMapper.toDto(product);
   }
 
   @Override
   public List<ProductDto> getSimilarProductsBySlug(String slug) {
     Product product = productRepository.findBySlug(slug)
-        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
     List<Product> similarProducts = productRepository.findRelatedProducts(
         product.getId(),
         product.getCategory().getId(),
         product.getBrand().getId(),
-        product.getSubcategory().getId(),
+        product.getSubcategory() != null ? product.getSubcategory().getId() : null,
         Pageable.ofSize(10));
 
     return productMapper.toDto(similarProducts);

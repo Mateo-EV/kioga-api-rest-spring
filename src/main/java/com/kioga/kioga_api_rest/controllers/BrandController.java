@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kioga.kioga_api_rest.dto.BrandDto;
+import com.kioga.kioga_api_rest.dto.brand.BrandDto;
 import com.kioga.kioga_api_rest.services.BrandService;
 
 import lombok.RequiredArgsConstructor;

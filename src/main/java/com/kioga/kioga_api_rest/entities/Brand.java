@@ -1,4 +1,4 @@
-package com.kioga.kioga_api_rest.entites;
+package com.kioga.kioga_api_rest.entities;
 
 import java.util.List;
 
@@ -8,21 +8,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "subcategories", uniqueConstraints = @UniqueConstraint(columnNames = { "slug", "category_id" }))
+@Table(name = "brands")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Subcategory {
+public class Brand {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -30,13 +27,12 @@ public class Subcategory {
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String slug;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "category_id", nullable = false)
-  private Category category;
+  @Column(nullable = false)
+  private String image;
 
-  @OneToMany(mappedBy = "subcategory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Product> products;
 }

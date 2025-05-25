@@ -3,7 +3,6 @@ package com.kioga.kioga_api_rest.services;
 import com.kioga.kioga_api_rest.dto.auth.request.ForgotPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.LoginRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.RegisterRequestDto;
-import com.kioga.kioga_api_rest.dto.auth.request.ResendVerificationRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.ResetPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.response.AuthResponseDto;
 
@@ -18,5 +17,5 @@ public interface AuthService {
 
   AuthResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto);
 
-  AuthResponseDto resendVerification(ResendVerificationRequestDto resendVerificationRequestDto);
+  AuthResponseDto resendVerification(String email);
 }

@@ -39,13 +39,14 @@ public class User implements UserDetails {
   @Column(nullable = false, unique = true)
   private String email;
 
-  @Column(nullable = false)
+  @Column(nullable = false, name = "is_email_valid")
   @ColumnDefault("false")
   private Boolean isEmailValid;
 
   @Column(name = "password", nullable = false)
   private String hashedPassword;
 
+  @Column(name = "created_at")
   @CreationTimestamp
   private Instant createdAt;
 

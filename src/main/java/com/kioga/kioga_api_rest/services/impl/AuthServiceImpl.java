@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.kioga.kioga_api_rest.dto.auth.request.ForgotPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.LoginRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.RegisterRequestDto;
-import com.kioga.kioga_api_rest.dto.auth.request.ResendVerificationRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.ResetPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.response.AuthResponseDto;
 import com.kioga.kioga_api_rest.entities.PasswordResetToken;
@@ -41,6 +40,12 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AuthResponseDto register(RegisterRequestDto registerRequestDto) {
+    boolean userExists = userRepository.existsByEmail(registerRequestDto.getEmail());
+
+    if (userExists) {
+      throw new RuntimeException("Este email ya está en uso");
+    }
+
     User user = User.builder()
         .name(registerRequestDto.getName())
         .email(registerRequestDto.getEmail())
@@ -81,7 +86,11 @@ public class AuthServiceImpl implements AuthService {
         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
     if (!encoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
-      throw new RuntimeException("Contraseña incorrecta.");
+      throw new RuntimeException("Contraseña incorrecta");
+    }
+
+    if (!user.getIsEmailValid()) {
+      throw new RuntimeException("El usuario no está verificado");
     }
 
     String token = jwtTokenProvider.generateToken(String.valueOf(user.getId()));
@@ -127,11 +136,11 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public AuthResponseDto resendVerification(ResendVerificationRequestDto resendVerificationRequestDto) {
-    User user = userRepository.findByEmail(resendVerificationRequestDto.getEmail())
+  public AuthResponseDto resendVerification(String email) {
+    User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    if (user.isEnabled()) {
+    if (user.getIsEmailValid()) {
       throw new RuntimeException("El usuario ya está verificado.");
     }
 

@@ -14,7 +14,7 @@ import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtTokenProvider {
-  private static final long EXPIRATION_MILLIS = 3600000;
+  private static final long EXPIRATION_MILLIS = 1000 * 60 * 60 * 24; // 1 day
 
   @Value("${jwt.secret}")
   private String jwtSecret;

@@ -1,6 +1,11 @@
 package com.kioga.kioga_api_rest.controllers;
 
+import java.io.IOException;
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,13 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kioga.kioga_api_rest.dto.auth.request.ForgotPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.LoginRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.RegisterRequestDto;
-import com.kioga.kioga_api_rest.dto.auth.request.ResendVerificationRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.request.ResetPasswordRequestDto;
 import com.kioga.kioga_api_rest.dto.auth.response.AuthResponseDto;
 import com.kioga.kioga_api_rest.dto.auth.response.UserProfileResponseDto;
 import com.kioga.kioga_api_rest.entities.User;
 import com.kioga.kioga_api_rest.services.AuthService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -38,10 +43,10 @@ public class AuthController {
   }
 
   @GetMapping("/verify")
-  public String verify(@RequestParam String token) {
+  public void verify(@RequestParam String token, HttpServletResponse response) throws IOException {
     authService.verify(token);
 
-    return "redirect:" + frontendUrl;
+    response.sendRedirect(frontendUrl);
   }
 
   @GetMapping("/profile")
@@ -51,8 +56,20 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginRequestDto request) {
-    return ResponseEntity.ok(authService.login(request));
+  public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginRequestDto request,
+      HttpServletResponse response) {
+    AuthResponseDto authResponse = authService.login(request);
+
+    ResponseCookie cookie = ResponseCookie.from("kioga_token", authResponse.getMessage())
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(Duration.ofDays(1))
+        .sameSite("Strict")
+        .build();
+
+    response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    return ResponseEntity.ok(authResponse);
   }
 
   @PostMapping("/forgot-password")
@@ -66,7 +83,22 @@ public class AuthController {
   }
 
   @PostMapping("/resend-verification")
-  public ResponseEntity<AuthResponseDto> resendVerification(@RequestBody @Valid ResendVerificationRequestDto request) {
-    return ResponseEntity.ok(authService.resendVerification(request));
+  public ResponseEntity<AuthResponseDto> resendVerification(@AuthenticationPrincipal User userDetails) {
+    return ResponseEntity.ok(authService.resendVerification(userDetails.getEmail()));
   }
+
+  @PostMapping("/logout")
+  public ResponseEntity<Void> logout(HttpServletResponse response) {
+    ResponseCookie deleteCookie = ResponseCookie.from("kioga_token", "")
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(0)
+        .sameSite("Strict")
+        .build();
+
+    response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    return ResponseEntity.noContent().build();
+  }
+
 }

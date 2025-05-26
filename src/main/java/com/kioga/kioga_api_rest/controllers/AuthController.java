@@ -1,10 +1,12 @@
 package com.kioga.kioga_api_rest.controllers;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,15 +40,30 @@ public class AuthController {
   private String frontendUrl;
 
   @PostMapping("/register")
-  public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid RegisterRequestDto request) {
-    return ResponseEntity.ok(authService.register(request));
+  public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid RegisterRequestDto request,
+      HttpServletResponse response) {
+    AuthResponseDto authResponse = authService.register(request);
+
+    ResponseCookie cookie = ResponseCookie.from("kioga_token", authResponse.getMessage())
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(Duration.ofDays(1))
+        .sameSite("Strict")
+        .build();
+
+    response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+    return ResponseEntity.ok(authResponse);
   }
 
   @GetMapping("/verify")
-  public void verify(@RequestParam String token, HttpServletResponse response) throws IOException {
+  public ResponseEntity<Void> verify(@RequestParam String token, HttpServletResponse response) throws IOException {
     authService.verify(token);
 
-    response.sendRedirect(frontendUrl);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setLocation(URI.create(frontendUrl));
+    return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
   }
 
   @GetMapping("/profile")

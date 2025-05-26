@@ -24,7 +24,7 @@ public class ProductController {
   @GetMapping
   public CursorPaginatedResponseDto<ProductDto> getPaginatedAndFilteredProducts(
       @RequestParam(required = false) Long cursor,
-      @RequestParam(required = false, defaultValue = "0") BigDecimal minPrice,
+      @RequestParam(required = false, defaultValue = "5") BigDecimal minPrice,
       @RequestParam(required = false, defaultValue = "4000") BigDecimal maxPrice,
       @RequestParam(required = false) List<String> categories,
       @RequestParam(required = false) List<String> brands,

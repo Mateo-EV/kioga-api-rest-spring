@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.kioga.kioga_api_rest.entities.Category;
 
@@ -18,4 +19,10 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
       ORDER BY COALESCE(SUM(op.quantity), 0)
       """)
   List<Category> findTopCategories(Pageable pageable);
+
+  @Query("""
+      SELECT c FROM Category c
+      WHERE c.name LIKE %:search%
+      """)
+  List<Category> searchCategories(@Param("search") String search, Pageable pageable);
 }

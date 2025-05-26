@@ -16,6 +16,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,6 +53,12 @@ public class User implements UserDetails {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Order> orders;
+
+  // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  // private PasswordResetToken passwordResetToken;
+
+  // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  // private VerificationToken verificationToken;
 
   @Override
   public String getUsername() {

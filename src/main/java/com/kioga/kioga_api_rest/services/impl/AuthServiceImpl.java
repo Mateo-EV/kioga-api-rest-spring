@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         .isEmailValid(false)
         .build();
 
-    userRepository.save(user);
+    user = userRepository.save(user);
 
     String token = UUID.randomUUID().toString();
     VerificationToken vt = VerificationToken.builder()
@@ -65,7 +65,9 @@ public class AuthServiceImpl implements AuthService {
 
     mailService.sendVerificationEmail(user.getEmail(), token);
 
-    return new AuthResponseDto("Usuario registrado exitosamente");
+    String tokenJwt = jwtTokenProvider.generateToken(String.valueOf(user.getId()));
+
+    return new AuthResponseDto(tokenJwt);
   }
 
   @Override
@@ -139,6 +141,8 @@ public class AuthServiceImpl implements AuthService {
   public AuthResponseDto resendVerification(String email) {
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    // tokenRepository.delete(user.getVerificationToken());
 
     if (user.getIsEmailValid()) {
       throw new RuntimeException("El usuario ya está verificado.");

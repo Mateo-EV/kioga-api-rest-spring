@@ -1,5 +1,7 @@
 package com.kioga.kioga_api_rest.services;
 
+import com.kioga.kioga_api_rest.dto.SearchBasicDto;
+
 public interface SearchService {
   /**
    * @return Expected to return this formal
@@ -10,5 +12,5 @@ public interface SearchService {
    *         brands: 3 Brands
    *         }
    */
-  public String getEntitiesResults(String search);
+  public SearchBasicDto getEntitiesResults(String search);
 }

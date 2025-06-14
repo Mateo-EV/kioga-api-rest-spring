@@ -60,9 +60,9 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
   @Value("${mercadopago.webhook-token}")
   private String webhookSecret;
 
-  private OrderRepository orderRepository;
-  private UserRepository userRepository;
-  private ProductRepository productRepository;
+  private final OrderRepository orderRepository;
+  private final UserRepository userRepository;
+  private final ProductRepository productRepository;
 
   @Data
   @NoArgsConstructor

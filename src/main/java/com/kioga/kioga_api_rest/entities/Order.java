@@ -52,7 +52,7 @@ public class Order {
 
   @Column(nullable = false)
   @ColumnDefault("false")
-  private boolean isDelivery;
+  private Boolean isDelivery;
 
   @Column(columnDefinition = "TEXT")
   private String notes;

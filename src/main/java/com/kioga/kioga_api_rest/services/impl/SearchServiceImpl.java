@@ -2,7 +2,6 @@ package com.kioga.kioga_api_rest.services.impl;
 
 import java.util.List;
 
-import org.hibernate.query.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 

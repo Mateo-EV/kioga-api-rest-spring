@@ -1,9 +1,15 @@
 package com.kioga.kioga_api_rest.services;
 
-public interface OrderService {
-  // void getOrdersByUser();
+import java.util.List;
 
-  // void startOrder();
+import com.kioga.kioga_api_rest.dto.order.OrderDto;
+import com.kioga.kioga_api_rest.dto.order.StartOrderRequestDto;
+import com.kioga.kioga_api_rest.entities.User;
+
+public interface OrderService {
+  List<OrderDto> getOrdersByUser(User user);
+
+  OrderDto startOrder(StartOrderRequestDto request, User user);
 
   // void updateOrderStatus();
 

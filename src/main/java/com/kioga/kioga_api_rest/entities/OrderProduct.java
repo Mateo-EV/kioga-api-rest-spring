@@ -38,7 +38,7 @@ public class OrderProduct {
 
   @Column(nullable = false)
   @ColumnDefault("1")
-  private int quantity;
+  private Integer quantity;
 
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal unitAmount;

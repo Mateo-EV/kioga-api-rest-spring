@@ -43,6 +43,11 @@ public class GlobalExceptionHandler {
     return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
   }
 
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<GlobalErrorResponse> handleBadRequest(BadRequestException ex, WebRequest request) {
+    return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<GlobalErrorResponse> handleAllUncaughtException(Exception ex, WebRequest request) {
     return buildErrorResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR, request);

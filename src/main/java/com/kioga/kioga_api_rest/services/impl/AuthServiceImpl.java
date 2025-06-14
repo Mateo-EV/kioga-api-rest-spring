@@ -14,6 +14,7 @@ import com.kioga.kioga_api_rest.dto.auth.response.AuthResponseDto;
 import com.kioga.kioga_api_rest.entities.PasswordResetToken;
 import com.kioga.kioga_api_rest.entities.User;
 import com.kioga.kioga_api_rest.entities.VerificationToken;
+import com.kioga.kioga_api_rest.exceptions.BadRequestException;
 import com.kioga.kioga_api_rest.repositories.PasswordResetTokenRepository;
 import com.kioga.kioga_api_rest.repositories.UserRepository;
 import com.kioga.kioga_api_rest.repositories.VerificationTokenRepository;
@@ -21,6 +22,7 @@ import com.kioga.kioga_api_rest.security.jwt.JwtTokenProvider;
 import com.kioga.kioga_api_rest.services.AuthService;
 import com.kioga.kioga_api_rest.services.MailService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -85,14 +87,10 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponseDto login(LoginRequestDto loginRequestDto) {
     User user = userRepository.findByEmail(loginRequestDto.getEmail())
-        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
     if (!encoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
-      throw new RuntimeException("Contraseña incorrecta");
-    }
-
-    if (!user.getIsEmailValid()) {
-      throw new RuntimeException("El usuario no está verificado");
+      throw new BadRequestException("Contraseña incorrecta");
     }
 
     String token = jwtTokenProvider.generateToken(String.valueOf(user.getId()));
@@ -103,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponseDto sendPasswordResetToken(ForgotPasswordRequestDto forgotPasswordRequest) {
     User user = userRepository.findByEmail(forgotPasswordRequest.getEmail())
-        .orElseThrow(() -> new RuntimeException("Email no registrado"));
+        .orElseThrow(() -> new EntityNotFoundException("Email no registrado"));
 
     String token = UUID.randomUUID().toString();
     PasswordResetToken resetToken = PasswordResetToken.builder()
@@ -121,14 +119,14 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
     User user = userRepository.findByEmail(resetPasswordRequestDto.getEmail())
-        .orElseThrow(() -> new RuntimeException("Email no registrado"));
+        .orElseThrow(() -> new EntityNotFoundException("Email no registrado"));
 
     PasswordResetToken resetToken = passwordResetTokenRepository
         .findByTokenAndUser(resetPasswordRequestDto.getToken(), user)
-        .orElseThrow(() -> new RuntimeException("Token no encontrado"));
+        .orElseThrow(() -> new EntityNotFoundException("Token no encontrado"));
 
     if (resetToken.isExpired()) {
-      throw new RuntimeException("Token inválido o expirado");
+      throw new BadRequestException("Token inválido o expirado");
     }
 
     user.setHashedPassword(encoder.encode(resetPasswordRequestDto.getNewPassword()));
@@ -140,12 +138,13 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponseDto resendVerification(String email) {
     User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
-    // tokenRepository.delete(user.getVerificationToken());
+    tokenRepository.delete(tokenRepository.findByUser(user)
+        .orElseThrow(() -> new EntityNotFoundException("Token no encontrado")));
 
     if (user.getIsEmailValid()) {
-      throw new RuntimeException("El usuario ya está verificado.");
+      throw new BadRequestException("El usuario ya está verificado.");
     }
 
     String token = UUID.randomUUID().toString();

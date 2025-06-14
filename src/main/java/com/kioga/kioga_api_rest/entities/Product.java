@@ -68,7 +68,7 @@ public class Product {
 
   @Column(nullable = false)
   @ColumnDefault("true")
-  private boolean isActive;
+  private Boolean isActive;
 
   @CreationTimestamp
   private Instant createdAt;

@@ -50,7 +50,7 @@ public class User implements UserDetails {
   @CreationTimestamp
   private Instant createdAt;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "user")
   private List<Order> orders;
 
   // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

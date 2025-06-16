@@ -57,10 +57,10 @@ public class Order {
   @Column(columnDefinition = "TEXT")
   private String notes;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "order", cascade = { CascadeType.PERSIST }, orphanRemoval = true)
   private List<OrderProduct> orderProducts;
 
-  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToOne(mappedBy = "order", orphanRemoval = true)
   private Address address;
 
   @CreationTimestamp

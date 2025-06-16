@@ -15,7 +15,14 @@ public class AddressRequiredIfDeliveryImpl
       return true;
 
     if (Boolean.TRUE.equals(dto.getIsDelivery())) {
-      if (dto.getAddress() == null) {
+      if (dto.getAddress() == null ||
+          dto.getAddress().getFirstName().isEmpty() ||
+          dto.getAddress().getLastName().isEmpty() ||
+          dto.getAddress().getDepartment().isEmpty() ||
+          dto.getAddress().getDistrict().isEmpty() ||
+          dto.getAddress().getPhone().isEmpty() ||
+          dto.getAddress().getProvince().isEmpty() ||
+          dto.getAddress().getStreetAddress().isEmpty()) {
         return false;
       }
     }

@@ -1,11 +1,11 @@
 package com.kioga.kioga_api_rest.services.impl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.kioga.kioga_api_rest.dto.order.OrderDto;
 import com.kioga.kioga_api_rest.dto.order.StartOrderRequestDto;
@@ -18,6 +18,7 @@ import com.kioga.kioga_api_rest.repositories.ProductRepository;
 import com.kioga.kioga_api_rest.services.MercadoPagoService;
 import com.kioga.kioga_api_rest.services.OrderService;
 import com.kioga.kioga_api_rest.services.impl.MercadoPagoServiceImpl.ProductDetailItem;
+import com.mercadopago.resources.preference.Preference;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,7 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-  @Transactional
-  public OrderDto startOrder(StartOrderRequestDto request, User user) {
+  public Preference startOrder(StartOrderRequestDto request, User user) {
     Order order = orderMapper.toEntity(request);
 
     List<Long> productIds = order.getOrderProducts().stream()
@@ -66,11 +66,37 @@ public class OrderServiceImpl implements OrderService {
         })
         .toList();
 
-    mercadoPagoService.createPaymentPreference(
+    Map<String, Object> addressMap = new HashMap<>();
+    addressMap.put("first_name", order.getAddress().getFirstName());
+    addressMap.put("last_name", order.getAddress().getLastName());
+    addressMap.put("phone", order.getAddress().getPhone());
+    addressMap.put("dni", order.getAddress().getDni());
+    addressMap.put("reference", order.getAddress().getReference());
+    addressMap.put("department", order.getAddress().getDepartment());
+    addressMap.put("province", order.getAddress().getProvince());
+    addressMap.put("district", order.getAddress().getDistrict());
+    addressMap.put("street_address", order.getAddress().getStreetAddress());
+    addressMap.put("zip_code", order.getAddress().getZipCode());
+
+    List<Map<String, Object>> detailsList = productDetails.stream()
+        .map(detail -> {
+          Map<String, Object> detailMap = new HashMap<>();
+          detailMap.put("product_id", detail.getId());
+          detailMap.put("quantity", detail.getQuantity());
+          return detailMap;
+        }).collect(Collectors.toList());
+
+    Map<String, Object> finalMap = new HashMap<>();
+    finalMap.put("user_id", user.getId());
+    finalMap.put("is_delivery", order.getIsDelivery());
+    finalMap.put("address", addressMap);
+    finalMap.put("details", detailsList);
+    finalMap.put("notes", order.getNotes());
+
+    return mercadoPagoService.createPaymentPreference(
         productDetails,
         order.getIsDelivery(),
-        order.getUser().getEmail());
-
-    return orderMapper.toDto(order);
+        user.getEmail(),
+        finalMap);
   }
 }

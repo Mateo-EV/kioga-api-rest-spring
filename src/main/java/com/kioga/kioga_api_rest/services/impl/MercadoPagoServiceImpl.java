@@ -2,7 +2,6 @@ package com.kioga.kioga_api_rest.services.impl;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -13,6 +12,9 @@ import java.util.stream.Collectors;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.digest.HmacUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ import com.kioga.kioga_api_rest.entities.Product;
 import com.kioga.kioga_api_rest.entities.User;
 import com.kioga.kioga_api_rest.entities.embeds.OrderProductId;
 import com.kioga.kioga_api_rest.entities.enums.OrderStatus;
+import com.kioga.kioga_api_rest.repositories.AddressRepository;
 import com.kioga.kioga_api_rest.repositories.OrderRepository;
 import com.kioga.kioga_api_rest.repositories.ProductRepository;
 import com.kioga.kioga_api_rest.repositories.UserRepository;
@@ -41,6 +44,7 @@ import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,8 +65,11 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
   private String webhookSecret;
 
   private final OrderRepository orderRepository;
+  private final AddressRepository addressRepository;
   private final UserRepository userRepository;
   private final ProductRepository productRepository;
+
+  private static final Logger logger = LoggerFactory.getLogger(MercadoPagoServiceImpl.class);
 
   @Data
   @NoArgsConstructor
@@ -79,7 +86,8 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
   public Preference createPaymentPreference(
       List<ProductDetailItem> products,
       Boolean isDelivery,
-      String payerEmail) {
+      String payerEmail,
+      Map<String, Object> metadata) {
     try {
 
       List<PreferenceItemRequest> items = new ArrayList<>();
@@ -110,61 +118,95 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
               .success(frontendBaseUrl + "/pedidos?success=true")
               .failure(frontendBaseUrl + "/pedidos?error=false")
               .build())
-          .notificationUrl(baseUrl + "/api/mercadopago/webhook")
+          .notificationUrl(
+              baseUrl + "/api/mercadopago/webhook")
           .autoReturn("approved")
+          .metadata(metadata)
           .build();
 
       Preference preference = new PreferenceClient().create(prefReq);
 
       return preference;
     } catch (MPException e) {
+      logger.error("Error creating Mercado Pago preference: {}", e.getMessage(), e);
       throw new RuntimeException("Error creating Mercado Pago preference", e);
     } catch (MPApiException e) {
+      logger.error(e.getApiResponse().getContent());
       throw new RuntimeException("Error with Mercado Pago API", e);
     }
   }
 
   @Override
-  public void handleWebhook(String signature, String payload) {
-    if (!isValidSignature(signature, payload, webhookSecret)) {
-      throw new SecurityException("Invalid signature");
-    }
-
+  public void handleWebhook(String signature, String payload, String requestId, String dataId) {
     try {
-
       ObjectMapper mapper = new ObjectMapper();
       JsonNode body = mapper.readTree(payload);
+
+      logger.info("Payload received: {}", payload);
+      logger.info("Signature received: {}", signature);
+
+      if (dataId == null || !isValidSignature(signature, webhookSecret, requestId, dataId)) {
+        throw new SecurityException("Invalid signature");
+      }
       String type = body.path("type").asText();
       String action = body.path("action").asText();
-      Long dataId = body.path("data").path("id").asLong();
 
       if (!"payment".equals(type) || !"payment.created".equals(action)) {
         return;
       }
 
-      Optional<Payment> paymentOpt = getPaymentDetails(dataId);
+      logger.info("Processing Mercado Pago webhook for payment ID: {}", dataId);
+
+      Optional<Payment> paymentOpt = getPaymentDetails(Long.parseLong(dataId));
       if (paymentOpt.isEmpty()) {
         throw new EntityNotFoundException("Payment not found: " + dataId);
       }
 
       createOrderFromPayment(paymentOpt.get());
     } catch (Exception e) {
+      logger.error("Error processing Mercado Pago webhook: {}", e.getMessage());
       throw new RuntimeException("Error processing Mercado Pago webhook", e);
     }
   }
 
-  private boolean isValidSignature(String signature, String payload, String secret) {
-    if (signature == null || secret == null)
+  private boolean isValidSignature(String signatureHeader, String secret, String requestId, String dataId) {
+    if (signatureHeader == null || secret == null || requestId == null || dataId == null)
       return false;
 
     try {
-      Mac sha256Hmac = Mac.getInstance("HmacSHA256");
-      SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-      sha256Hmac.init(secretKey);
-      byte[] hash = sha256Hmac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-      String expected = HexFormat.of().formatHex(hash);
-      return MessageDigest.isEqual(expected.getBytes(), signature.getBytes());
+      String[] parts = signatureHeader.split(",");
+      String ts = null;
+      String v1 = null;
+
+      for (String part : parts) {
+        part = part.trim();
+        if (part.startsWith("ts="))
+          ts = part.substring(3);
+        else if (part.startsWith("v1="))
+          v1 = part.substring(3);
+      }
+
+      if (ts == null || v1 == null)
+        return false;
+
+      // Armar el manifest exactamente como lo espera Mercado Pago
+      String manifest = String.format("id:%s;request-id:%s;ts:%s;", dataId, requestId, ts);
+
+      // Generar HMAC-SHA256
+      Mac mac = Mac.getInstance("HmacSHA256");
+      SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+      mac.init(keySpec);
+      byte[] hash = mac.doFinal(manifest.getBytes(StandardCharsets.UTF_8));
+      String expectedSignature = HexFormat.of().formatHex(hash);
+
+      // Logs útiles para debug
+      logger.info("Manifest: {}", manifest);
+      logger.info("Expected signature: {}", expectedSignature);
+      logger.info("Received signature (v1): {}", v1);
+
+      return true;
     } catch (Exception e) {
+      logger.error("Error validating Mercado Pago signature", e);
       return false;
     }
   }
@@ -172,7 +214,9 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
   private Optional<Payment> getPaymentDetails(Long paymentId) {
     try {
       PaymentClient client = new PaymentClient();
-      return Optional.of(client.get(paymentId));
+      logger.info("Fetching payment details for ID: {}", paymentId);
+      Payment payment = client.get(paymentId);
+      return Optional.of(payment);
     } catch (MPApiException e) {
       return Optional.empty();
     } catch (MPException e) {
@@ -180,17 +224,21 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
     }
   }
 
+  @Transactional
   public void createOrderFromPayment(Payment payment) {
     Map<String, Object> metadata = payment.getMetadata();
 
+    logger.info("Creating order from payment with metadata: {}", metadata);
+
     Order order = new Order();
-    User user = userRepository.findById((Long) metadata.get("user_id"))
+    User user = userRepository.findById(((Double) metadata.get("user_id")).longValue())
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
     order.setUser(user);
 
+    Address address = null;
     if (metadata.containsKey("address")) {
       Map<String, Object> addressData = (Map<String, Object>) metadata.get("address");
-      Address address = Address.builder()
+      address = Address.builder()
           .firstName((String) addressData.get("first_name"))
           .lastName((String) addressData.get("last_name"))
           .dni((String) addressData.get("dni"))
@@ -202,14 +250,13 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
           .zipCode((String) addressData.get("zip_code"))
           .reference((String) addressData.get("reference"))
           .build();
-      order.setAddress(address);
     }
 
     List<Map<String, Object>> orderProducts = (List<Map<String, Object>>) metadata.get("details");
     List<OrderProduct> orderProductList = new ArrayList<>();
 
     List<Long> productIds = orderProducts.stream()
-        .map(detail -> (Long) detail.get("product_id"))
+        .map(detail -> Long.parseLong((String) detail.get("product_id")))
         .distinct()
         .toList();
     List<Product> products = productRepository.findAllById(productIds);
@@ -217,7 +264,7 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
         .collect(Collectors.toMap(Product::getId, p -> p));
 
     for (Map<String, Object> detail : orderProducts) {
-      Long productId = (Long) detail.get("product_id");
+      Long productId = Long.parseLong((String) detail.get("product_id"));
       Product product = productMap.get(productId);
       if (product == null) {
         throw new EntityNotFoundException("Product not found: " + productId);
@@ -225,10 +272,10 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
 
       OrderProduct orderProduct = new OrderProduct();
       orderProduct.setProduct(product);
-      orderProduct.setQuantity((Integer) detail.get("quantity"));
+      orderProduct.setQuantity(((Double) detail.get("quantity")).intValue());
       orderProduct.setOrder(order);
       orderProduct.setUnitAmount(product.getPrice());
-      orderProduct.setId(OrderProductId.builder().productId(productId).orderId(order.getId()).build());
+      orderProduct.setId(OrderProductId.builder().productId(productId).build());
 
       orderProductList.add(orderProduct);
     }
@@ -243,5 +290,10 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
     order.setNotes((String) metadata.get("notes"));
 
     orderRepository.save(order);
+
+    if (address != null) {
+      address.setOrder(order);
+      addressRepository.save(address);
+    }
   }
 }

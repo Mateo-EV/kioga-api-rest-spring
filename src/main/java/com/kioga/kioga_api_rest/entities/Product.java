@@ -51,15 +51,15 @@ public class Product {
   @ColumnDefault("0")
   private Integer stock;
 
-  @ManyToOne(optional = false)
+  @ManyToOne
   @JoinColumn(name = "category_id", nullable = false)
   private Category category;
 
-  @ManyToOne(optional = true)
+  @ManyToOne
   @JoinColumn(name = "subcategory_id", nullable = true)
   private Subcategory subcategory;
 
-  @ManyToOne(optional = false)
+  @ManyToOne
   @JoinColumn(name = "brand_id", nullable = false)
   private Brand brand;
 

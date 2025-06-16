@@ -40,16 +40,12 @@ public class StartOrderRequestDto {
     @NotBlank(message = "El teléfono es obligatorio")
     private String phone;
 
-    @NotBlank(message = "El departamento es obligatorio")
     private String department;
 
-    @NotBlank(message = "La provincia es obligatoria")
     private String province;
 
-    @NotBlank(message = "El distrito es obligatorio")
     private String district;
 
-    @NotBlank(message = "La dirección de la calle es obligatoria")
     private String streetAddress;
 
     private String zipCode;

@@ -1,5 +1,6 @@
 package com.kioga.kioga_api_rest.services.impl;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,11 +58,15 @@ public class OrderServiceImpl implements OrderService {
           if (product == null) {
             throw new EntityNotFoundException("Product not found: " + detail.getProduct().getId());
           }
+
+          BigDecimal priceDiscounted = product.getPrice()
+              .subtract(product.getPrice().multiply(product.getDiscount()));
+
           return ProductDetailItem.builder()
               .id(product.getId().toString())
               .title(product.getName())
               .quantity(detail.getQuantity())
-              .unitPrice(product.getPrice())
+              .unitPrice(priceDiscounted)
               .build();
         })
         .toList();

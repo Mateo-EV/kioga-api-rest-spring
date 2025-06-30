@@ -115,11 +115,11 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
           .items(items)
           .payer(PreferencePayerRequest.builder().email(payerEmail).build())
           .backUrls(PreferenceBackUrlsRequest.builder()
-              .success(frontendBaseUrl + "/pedidos?success=true")
-              .failure(frontendBaseUrl + "/pedidos?error=false")
+              .success("https://localhost:3000" + "/pedidos?success=true")
+              .failure("https://localhost:3000" + "/pedidos?error=false")
               .build())
           .notificationUrl(
-              baseUrl + "/api/mercadopago/webhook")
+              "https://4838-2800-200-f488-9a8d-c060-df6c-a9f7-af62.ngrok-free.app" + "/api/mercadopago/webhook")
           .autoReturn("approved")
           .metadata(metadata)
           .build();
@@ -274,7 +274,8 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
       orderProduct.setProduct(product);
       orderProduct.setQuantity(((Double) detail.get("quantity")).intValue());
       orderProduct.setOrder(order);
-      orderProduct.setUnitAmount(product.getPrice());
+      orderProduct.setUnitAmount(product.getPrice()
+          .subtract(product.getPrice().multiply(product.getDiscount())));
       orderProduct.setId(OrderProductId.builder().productId(productId).build());
 
       orderProductList.add(orderProduct);

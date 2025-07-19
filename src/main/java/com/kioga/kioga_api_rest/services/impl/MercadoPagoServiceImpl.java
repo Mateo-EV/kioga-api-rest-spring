@@ -115,11 +115,11 @@ public class MercadoPagoServiceImpl implements MercadoPagoService {
           .items(items)
           .payer(PreferencePayerRequest.builder().email(payerEmail).build())
           .backUrls(PreferenceBackUrlsRequest.builder()
-              .success("https://localhost:3000" + "/pedidos?success=true")
-              .failure("https://localhost:3000" + "/pedidos?error=false")
+              .success(frontendBaseUrl + "/pedidos?success=true")
+              .failure(frontendBaseUrl + "/pedidos?error=false")
               .build())
           .notificationUrl(
-              "https://4838-2800-200-f488-9a8d-c060-df6c-a9f7-af62.ngrok-free.app" + "/api/mercadopago/webhook")
+              baseUrl + "/api/mercadopago/webhook")
           .autoReturn("approved")
           .metadata(metadata)
           .build();

@@ -52,6 +52,9 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<GlobalErrorResponse> handleAllUncaughtException(Exception ex, WebRequest request) {
+
+    log.error("Uncaught exception occurred", ex);
+    log.info("Uncaught exception details: {}", ex.getMessage(), ex);
     return buildErrorResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR, request);
   }
 
@@ -62,7 +65,7 @@ public class GlobalExceptionHandler {
   private ResponseEntity<GlobalErrorResponse> buildErrorResponse(String message, HttpStatus status,
       WebRequest request) {
     log.error("Error occurred: {}", message, status);
-    log.info(message, status, request);
+    log.info("Error details: {}", request);
 
     GlobalErrorResponse error = new GlobalErrorResponse(
         Instant.now(),

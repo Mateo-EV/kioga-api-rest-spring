@@ -44,12 +44,15 @@ public class AuthController {
       HttpServletResponse response) {
     AuthResponseDto authResponse = authService.register(request);
 
+    String domain = ".railway.app";
+
     ResponseCookie cookie = ResponseCookie.from("kioga_token", authResponse.getMessage())
         .httpOnly(true)
         .secure(true)
         .path("/")
         .maxAge(Duration.ofDays(1))
         .sameSite("Strict")
+        .domain(domain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -77,12 +80,15 @@ public class AuthController {
       HttpServletResponse response) {
     AuthResponseDto authResponse = authService.login(request);
 
+    String domain = ".railway.app";
+
     ResponseCookie cookie = ResponseCookie.from("kioga_token", authResponse.getMessage())
         .httpOnly(true)
         .secure(true)
         .path("/")
         .maxAge(Duration.ofDays(1))
         .sameSite("None")
+        .domain(domain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -106,12 +112,15 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<Void> logout(HttpServletResponse response) {
+    String domain = ".railway.app";
+
     ResponseCookie deleteCookie = ResponseCookie.from("kioga_token", "")
         .httpOnly(true)
         .secure(true)
         .path("/")
         .maxAge(0)
         .sameSite("None")
+        .domain(domain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());

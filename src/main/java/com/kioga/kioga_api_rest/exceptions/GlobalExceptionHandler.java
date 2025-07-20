@@ -13,8 +13,10 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
   @ExceptionHandler(EntityNotFoundException.class)
   public ResponseEntity<GlobalErrorResponse> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
@@ -59,6 +61,9 @@ public class GlobalExceptionHandler {
 
   private ResponseEntity<GlobalErrorResponse> buildErrorResponse(String message, HttpStatus status,
       WebRequest request) {
+    log.error("Error occurred: {}", message, status);
+    log.info(message, status, request);
+
     GlobalErrorResponse error = new GlobalErrorResponse(
         Instant.now(),
         status.value(),

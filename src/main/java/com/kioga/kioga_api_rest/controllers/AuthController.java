@@ -39,6 +39,8 @@ public class AuthController {
   @Value("${frontend.base-url}")
   private String frontendUrl;
 
+  private String temporalDomain = ".railway.app";
+
   @PostMapping("/register")
   public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid RegisterRequestDto request,
       HttpServletResponse response) {
@@ -49,7 +51,8 @@ public class AuthController {
         .secure(true)
         .path("/")
         .maxAge(Duration.ofDays(1))
-        .sameSite("Strict")
+        .sameSite("None")
+        .domain(temporalDomain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -83,6 +86,7 @@ public class AuthController {
         .path("/")
         .maxAge(Duration.ofDays(1))
         .sameSite("None")
+        .domain(temporalDomain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -112,6 +116,7 @@ public class AuthController {
         .path("/")
         .maxAge(0)
         .sameSite("None")
+        .domain(temporalDomain)
         .build();
 
     response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
